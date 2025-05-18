@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+
+  <link rel="icon" type="image/png"
+    href="https://raw.githubusercontent.com/drusho/workout-app/main/images/barbell.png?raw=true" />
+  <style>
+    body {
+      padding: 15px;
+      font-family: sans-serif;
+    }
+
+    /* --- BEGIN Full Page Loader Styles --- */
+    .loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(255, 255, 255, 0.85);
+      /* Semi-transparent white backdrop */
+      display: flex;
+      /* Used by JS to show/hide */
+      justify-content: center;
+      align-items: center;
+      z-index: 1060;
+      /* Higher than Bootstrap modals (1050-1055) */
+    }
+
+    .input-numeric-short {
+      max-width: 75px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .app-header .header-icon.fa-dumbbell {
+      font-size: 2rem;
+      /* Adjust size as needed */
+      /* color: #0d6efd; */
+      /* Example: Bootstrap primary blue, or your preferred color */
+      transform: rotate(-19deg);
+      /* Apply the rotation */
+      line-height: .25;
+      /* Helps with vertical alignment for icons */
+    }
+
+    .app-header h4 {
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 1.75rem;
+    }
+
+    #fullPageLoader .fa-dumbbell.fa-spin {
+      font-size: 5rem;
+      /* fa-3x is already applied, but you can override if needed */
+      color: #0d6efd;
+      /* Example: Bootstrap primary blue, or your preferred color */
+    }
+
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    #workoutDisplay {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 0.375rem;
+      background-color: #f9f9f9;
+    }
+
+    #workoutDisplay ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 0;
+    }
+
+    #workoutDisplay li.exercise-list-item {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      font-size: 0.95rem;
+      color: #555;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .exercise-list-item.logged-today-visual {
+      background-color: #e6ffed;
+      border-left: 4px solid #28a745;
+    }
+
+    .completion-indicator {
+      width: 24px;
+      margin-top: 1px;
+      font-size: 1.2rem;
+      color: #28a745;
+      text-align: center;
+    }
+
+    #workoutDisplay li .exercise-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #workoutDisplay li .exercise-details .main-info {
+      font-weight: normal;
+    }
+
+    #workoutDisplay li .exercise-details strong {
+      font-weight: bold;
+    }
+
+    #workoutDisplay li .exercise-details .prescription-details {
+      font-weight: normal;
+    }
+
+    #workoutDisplay li small {
+      display: block;
+      font-size: 0.8rem;
+      color: #777;
+      margin-top: 3px;
+    }
+
+    /* #loadingIndicator removed, using full page loader now */
+    #formLoadingIndicator {
+      /* Kept for form submissions, as per current scope */
+      display: none;
+      color: #007bff;
+      font-style: italic;
+    }
+
+    .submit-button-container {
+      display: flex;
+      justify-content: flex-end;
+      /* Aligns button to the right */
+      width: 100%;
+    }
+
+    .button {
+      position: relative;
+      display: flex;
+      /* Changed from column to center content, though spans are absolute */
+      align-items: center;
+      justify-content: center;
+      width: 12.5rem;
+      /* Approx 200px if 1rem = 16px */
+      min-height: 50px;
+      /* Ensure a decent tap height */
+      margin: 0;
+      /* Removed typo from 'magrin' */
+      padding: 1rem 1.5rem;
+      /* Adjusted padding slightly for better text fit */
+      background-color: #3498db;
+      /* $color-2 (Blue) */
+      border: none;
+      border-radius: 0.3125rem;
+      /* 5px */
+      box-shadow: 0 12px 24px 0 rgba(0, 0, 0, 0.2);
+      color: white;
+      font-weight: 300;
+      /* Ensure 'Source Sans Pro' or similar is loaded if you want this exact weight */
+      text-transform: uppercase;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      /* Smooth background transition */
+    }
+
+
+    .button .submit-text-icon i,
+    .button .loading-spinner i,
+    .button .check-mark i {
+      margin-right: 0.5em;
+      /* Adds a little space if text is next to icon and not via &nbsp; */
+    }
+
+    /* If text is only "Submit Exercise", the above margin-right is for the paper-plane */
+    .button .submit-text-icon i.fa-paper-plane {
+      /* Specific spacing for paper plane if needed */
+      /* margin-right: 0.5em; */
+      /* Done by &nbsp; currently */
+    }
+
+    .button:before {
+      /* For the loading bar effect */
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background-color: #58d68d;
+      /* lighten($color-3, 10%) where $color-3 is #2ecc71 (green) */
+      z-index: 0;
+      /* Ensure text is above */
+    }
+
+    .button span {
+      position: absolute;
+      display: flex;
+      /* For centering icons */
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      /* Ensure text/icons are above the :before pseudo-element */
+      transition: top 0.5s ease, opacity 0.5s ease;
+      /* Matched $base-duration */
+    }
+
+    .button .submit-text {
+      position: relative;
+      /* To allow z-index to work and keep it flow-like if other spans are absolute */
+      opacity: 1;
+      top: 0;
+    }
+
+    .button .loading-spinner {
+      font-size: 1.5rem;
+      /* 24px */
+      opacity: 0;
+      top: 100%;
+      /* Start hidden below */
+    }
+
+    .button .check-mark {
+      font-size: 1.5rem;
+      /* 24px */
+      opacity: 0;
+      top: 100%;
+      /* Start hidden below */
+      display: block;
+      /* Keep as block, but opacity controls visibility */
+    }
+
+    /* Active state (loading) */
+    .button.active {
+      background-color: #2ecc71;
+      /* $color-3 (Green) */
+      cursor: wait;
+    }
+
+    .button.active:before {
+      /* Loading bar animation */
+      width: 100%;
+      transition: width 3s linear;
+      /* Example duration for loading bar */
+    }
+
+    .button.active .submit-text {
+      opacity: 0;
+      top: -100%;
+      /* Move original text up */
+    }
+
+    .button.active .loading-spinner {
+      opacity: 1;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .button.active .loading-spinner i {
+      animation: loading 0.5s linear infinite;
+      /* Matched $base-duration */
+    }
+
+    /* Finished state */
+    .button.finished {
+      background-color: #58d68d;
+      /* lighten($color-3, 10%) - Lighter green */
+      cursor: default;
+    }
+
+    .button.finished:before {
+      /* Optional: reset loading bar if needed or hide */
+      width: 0%;
+      transition: width 0.1s linear;
+      /* Quick reset */
+    }
+
+    .button.finished .submit-text,
+    .button.finished .loading-spinner {
+      opacity: 0;
+      top: -100%;
+      /* Hide by moving up */
+    }
+
+    .button.finished .check-mark {
+      opacity: 1;
+      top: 50%;
+      transform: translateY(-50%) scale(1);
+      /* Ensure scale is 1 initially */
+      animation: scaleCheckmark 0.5s ease-out;
+      /* Matched $base-duration */
+    }
+
+    @keyframes loading {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes scaleCheckmark {
+
+      /* Simplified scale for checkmark pop */
+      0% {
+        transform: translateY(-50%) scale(0.2);
+        opacity: 0;
+      }
+
+      70% {
+        transform: translateY(-50%) scale(1.2);
+      }
+
+      100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .buttons-customized {
+      --button-background: transparent;
+      --button-color: black;
+      background-color: var(--button-background);
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      color: var(--button-color);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      height: auto;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      position: relative;
+      text-align: center;
+      text-decoration: none;
+      transition: box-shadow 150ms cubic-bezier(0.61, 1, 0.88, 1), background-color 150ms ease;
+      white-space: normal;
+      overflow: hidden;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.2;
+      max-width: 160px;
+    }
+
+    button.buttons-customized>span {
+      display: block;
+      line-height: 1.3;
+    }
+
+    button.buttons-customized.-bg-green {
+      --button-background: #28a745;
+      --button-color: white;
+      border-color: #28a745;
+    }
+
+    button.buttons-customized.-bg-green:hover {
+      background-color: #218838;
+    }
+
+    button.buttons-customized:hover,
+    button.buttons-customized:focus {
+      box-shadow: 0 3px 7px 1px rgba(50, 50, 50, 0.25);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #actualAmrapRepsGroup {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="fullPageLoader" class="loader-overlay" style="display: none;">
+    <i class="fa-solid fa-dumbbell fa-spin fa-3x"></i>
+  </div>
+
+
+
+  <div class="app-header">
+    <i class="fa-solid fa-dumbbell header-icon me-2"></i>
+    <h4>Rusho's Workout Logger</h4>
+  </div>
+
+  <div class="mb-3">
+    <label for="workoutTemplateSelect" class="form-label">Workout Plan</label>
+    <select class="form-select" id="workoutTemplateSelect" name="workoutTemplateSelect" required
+        onchange="loadAndDisplayWorkoutPlan()">
+        <option value="" disabled selected>Loading templates...</option>
+      </select>
+  </div>
+  </div>
+
+  <div class="mb-2">
+    <button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse"
+            data-bs-target="#workoutDisplayCollapse" aria-expanded="true" aria-controls="workoutDisplayCollapse">
+      Workout Plan Summary <span class="toggle-icon float-end">&#x25BC;</span>
+    </button>
+  </div>
+
+  <div class="collapse show" id="workoutDisplayCollapse">
+    <div id="workoutDisplay">
+      <div id="workoutDetailsList"></div>
+    </div>
+  </div>
+
+  <hr />
+  <h6>Log Exercise <span id="formLoadingIndicator" class="ms-2"></span></h6>
+  <form id="logForm">
+    <div class="mb-3">
+      <select class="form-select form-select-sm" id="exerciseSelect" name="exerciseSelect" required disabled
+    onchange="prefillFormFields()">
+    <option value="" disabled selected>Select workout plan first...</option>    
+  </select>
+    </div>
+    <div id="lastWorkoutDetailsToast" class="alert alert-secondary mt-2"
+      style="display: none; font-size: 0.875rem; padding: 0.6rem 1rem;">
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-3">
+        <label for="setsPerformed" class="form-label">Sets</label>
+        <input type="number" class="form-control form-control-sm input-numeric-short" id="setsPerformed" name="setsPerformed" required />
+      </div>
+
+      <div class="col-3">
+        <label for="repsPerformed" class="form-label">Reps</label>
+        <div class="input-group input-group-sm">
+          <input type="number" class="form-control form-control-sm input-numeric-short" id="repsPerformed" name="repsPerformed" required placeholder="e.g. 10" />
+          <small id="amrapTextIndicator" class="input-group-text" style="display: none; color: #555; white-space: nowrap;"><em>(AMRAP)</em></small>
+        </div>
+      </div>
+
+      <div class="col-3">
+        <label for="weightUsed" class="form-label">Weight <span id="weightUnitLabel">(lbs)</span></label>
+        <input type="number" step="any" class="form-control form-control-sm input-numeric-short" id="weightUsed" name="weightUsed" required />
+      </div>
+
+      <div class="col-3">
+        <label for="rpeValue" class="form-label">RPE</label>
+        <input type="number" class="form-control form-control-sm input-numeric-short" id="rpeValue" name="rpe" min="0" max="10" step="0.5" required placeholder="0-10" />
+      </div>
+      <div class="col-3" id="actualAmrapRepsGroup" style="display: none;">
+        <label for="actualAmrapReps" class="col-4 col-form-label">Actual AMRAP</label>
+        <div class="col-8">
+          <input type="number" class="form-control form-control-sm input-numeric-short" id="actualAmrapReps" name="actualAmrapReps" />
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label for="workoutNotes" class="form-label"></br>Notes (Optional):</label>
+        <textarea class="form-control form-control-sm" id="workoutNotes" name="workoutNotes" rows="2"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <div class="submit-button-container mt-3 mb-2">
+    <button type="submit" class="button" form="logForm" id="logFormSubmitButton">
+    <span class="submit-text-icon"> <i class="fa-regular fa-paper-plane"></i>&nbsp;Submit Exercise
+    </span>
+    <span class="loading-spinner"><i class="fa-solid fa-rotate"></i></span> <span class="check-mark"><i class="fa-solid fa-check"></i></span>   </button>
+  </div>
+
+
+
+  <hr />
+  <div id="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous">
+  </script>
+
+  <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+
+  <script>
+    // DOM Elements
+  const logFormSubmitButton = document.getElementById("logFormSubmitButton");
+  const workoutTemplateSelect = document.getElementById("workoutTemplateSelect");
+  const exerciseSelect = document.getElementById("exerciseSelect");
+  const formLoadingIndicator = document.getElementById("formLoadingIndicator");
+  const statusDiv = document.getElementById("status");
+  const logForm = document.getElementById("logForm");
+  const workoutDetailsListDiv = document.getElementById("workoutDetailsList");
+  const actualAmrapRepsGroup = document.getElementById("actualAmrapRepsGroup");
+  const actualAmrapRepsInput = document.getElementById("actualAmrapReps");
+  const amrapTextIndicator = document.getElementById("amrapTextIndicator");
+  const weightUnitLabel = document.getElementById("weightUnitLabel");
+  // RPE input is now a standard number input with id "rpeValue"
+  // const rpeCarouselElement = document.getElementById("rpeFlickityCarousel"); // REMOVED
+  // let flktyRPE = null; // REMOVED
+
+  const workoutDisplayCollapseElement = document.getElementById('workoutDisplayCollapse');
+  const fullPageLoader = document.getElementById('fullPageLoader');
+  const lastWorkoutDetailsToast = document.getElementById("lastWorkoutDetailsToast");
+
+  const appState = {
+    currentWorkoutPlanDetails: [],
+    currentSelectedExerciseId: null
+    // currentRpeValue: null, // REMOVED - RPE is now a direct number input
+    // MIN_RPE, MAX_RPE, INITIAL_RPE_INDEX are no longer needed for carousel
+  };
+
+  let lastSubmittedLogFormData = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // createRpeFlickityCells(); // REMOVED
+    // initializeRpeFlickity(); // REMOVED
+    loadWorkoutTemplates();
+
+    if (workoutDisplayCollapseElement) {
+      const toggleButton = document.querySelector('[data-bs-target="#workoutDisplayCollapse"]');
+      const toggleIcon = toggleButton ? toggleButton.querySelector('.toggle-icon') : null;
+
+      if (toggleIcon) {
+        workoutDisplayCollapseElement.addEventListener('show.bs.collapse', function() {
+          toggleIcon.innerHTML = '&#x25B2;'; // Up arrow
+        });
+        workoutDisplayCollapseElement.addEventListener('hide.bs.collapse', function() {
+          toggleIcon.innerHTML = '&#x25BC;'; // Down arrow
+        });
+      }
+    }
+  });
+
+  // createRpeFlickityCells() function REMOVED
+  // initializeRpeFlickity() function REMOVED
+
+  function toggleMainLoading(isLoading) {
+    if (fullPageLoader) {
+      fullPageLoader.style.display = isLoading ? "flex" : "none";
+    }
+    workoutTemplateSelect.disabled = isLoading;
+    exerciseSelect.disabled = isLoading || !workoutTemplateSelect.value;
+    const formElements = logForm.elements;
+    for (let i = 0; i < formElements.length; i++) {
+      formElements[i].disabled = isLoading;
+    }
+    // Flickity related REMOVED
+    const collapseButton = document.querySelector('[data-bs-target="#workoutDisplayCollapse"]');
+    if (collapseButton) collapseButton.disabled = isLoading;
+    const submitButton = document.querySelector('button[form="logForm"]');
+    if (submitButton) submitButton.disabled = isLoading;
+  }
+
+  function toggleFormLoading(isLoading) {
+    // formLoadingIndicator.style.display = isLoading ? "inline" : "none";
+    const elementsToToggle = ['setsPerformed', 'repsPerformed', 'actualAmrapReps', 'weightUsed', 'rpeValue', 'workoutNotes'];
+    elementsToToggle.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isLoading;
+    });
+    
+    const submitButton = document.querySelector('button[form="logForm"]');
+    if (submitButton) {
+      submitButton.disabled = isLoading;
+    }
+  }
+
+  function clearLogForm() {
+    logForm.reset();
+    document.getElementById("setsPerformed").value = "";
+    const repsInput = document.getElementById("repsPerformed");
+    repsInput.value = "";
+    repsInput.placeholder = "e.g. 10"; // Reset placeholder
+    repsInput.readOnly = false; // Ensure reps input is editable
+    document.getElementById("weightUsed").value = "";
+    document.getElementById("workoutNotes").value = "";
+    actualAmrapRepsInput.value = "";
+    document.getElementById("rpeValue").value = ""; // Clear RPE number input
+
+    actualAmrapRepsGroup.style.display = "none";
+    amrapTextIndicator.style.display = "none";
+    weightUnitLabel.textContent = "(lbs)";
+
+    if (lastWorkoutDetailsToast) {
+        lastWorkoutDetailsToast.style.display = "none";
+        lastWorkoutDetailsToast.textContent = "";
+    }
+  }
+
+  function loadWorkoutTemplates() {
+    toggleMainLoading(true);
+    google.script.run
+      .withSuccessHandler(handleWorkoutTemplatesSuccess)
+      .withFailureHandler(handleGenericFailure)
+      .getAvailableWorkoutTemplates();
+  }
+
+  function handleWorkoutTemplatesSuccess(templates) {
+    workoutTemplateSelect.innerHTML = '<option value="" disabled selected>Select workout plan...</option>';
+    if (templates && templates.length > 0) {
+      templates.forEach(template => {
+        workoutTemplateSelect.add(new Option(template.templateName, template.templateId));
+      });
+    } else {
+      workoutTemplateSelect.innerHTML = '<option value="" disabled selected>No templates found.</option>';
+    }
+    toggleMainLoading(false);
+  }
+
+  function loadAndDisplayWorkoutPlan() {
+    const selectedTemplateId = workoutTemplateSelect.value;
+    appState.currentSelectedExerciseId = null;
+    exerciseSelect.innerHTML = '<option value="" disabled selected>Loading exercises...</option>';
+    exerciseSelect.disabled = true;
+    workoutDetailsListDiv.innerHTML = "<p><i>Loading details...</i></p>";
+    
+    clearLogForm(); 
+
+    if (lastWorkoutDetailsToast) {
+        lastWorkoutDetailsToast.style.display = "none";
+        lastWorkoutDetailsToast.textContent = "";
+    }
+
+    if (!selectedTemplateId) {
+      workoutDetailsListDiv.innerHTML = "<p><i>Select a workout plan to view details.</i></p>";
+      exerciseSelect.innerHTML = '<option value="" disabled selected>Select workout plan first...</option>';
+      if (workoutDisplayCollapseElement && !workoutDisplayCollapseElement.classList.contains('show')) {
+          new bootstrap.Collapse(workoutDisplayCollapseElement).show();
+      }
+      return;
+    }
+    toggleMainLoading(true);
+    google.script.run
+      .withSuccessHandler(handleWorkoutPlanDataSuccess)
+      .withFailureHandler(handleGenericFailure)
+      .getWorkoutDetailsForTemplate(selectedTemplateId);
+  }
+
+  function handleWorkoutPlanDataSuccess(planDetails) {
+    appState.currentWorkoutPlanDetails = [];
+    exerciseSelect.innerHTML = ""; 
+
+    if (planDetails && Array.isArray(planDetails) && planDetails.length > 0) {
+      appState.currentWorkoutPlanDetails = planDetails;
+      const placeholderOption = new Option("Select exercise...", "", true, true);
+      placeholderOption.disabled = true;
+      exerciseSelect.add(placeholderOption);
+
+      let displayHtml = "<ul>";
+      planDetails.forEach(exercise => {
+        const displayName = exercise.exerciseAlias || exercise.exerciseName;
+        const loggedClass = exercise.isLoggedToday ? "logged-today-visual" : "";
+        const completionIndicator = exercise.isLoggedToday ? `<span class="completion-indicator me-2">&#10004;</span>` : `<span class="completion-indicator me-2"></span>`;
+        let weightDisplayPart = "";
+        if (parseFloat(exercise.calculatedWeight) > 0 || (String(exercise.calculatedReps).toUpperCase() === "AMRAP" && parseFloat(exercise.calculatedWeight) >= 0)) {
+            weightDisplayPart = ` @ ${parseFloat(exercise.calculatedWeight).toFixed(1)} ${exercise.weightUnit || 'lbs'}`;
+        }
+        let mainInfo = `<strong>${displayName}</strong>: <span class="prescription-details">${exercise.calculatedSets} x ${exercise.calculatedReps}${weightDisplayPart}</span>`;
+        let primaryNote = "";
+          if (exercise.stepNotes) {
+            const weekMatch = exercise.stepNotes.match(/Week\s*\d+(\.\d+)?/i);
+            let weekText = weekMatch ? weekMatch[0] : `Step ${exercise.currentStepNumber}`;
+            if (!exercise.isBodyweightMaxRepsModel && parseFloat(exercise.baseWeight) > 0 && parseFloat(exercise.rawCalculatedWeight) > 0 && String(exercise.calculatedReps).toUpperCase() !== "AMRAP") {
+              const perc = (parseFloat(exercise.rawCalculatedWeight) / parseFloat(exercise.baseWeight)) * 100;
+              if (!isNaN(perc) && perc >= 0 && perc <= 200) {
+                primaryNote = `${weekText}: ${perc.toFixed(0)}% of ${exercise.baseWeight} ${exercise.weightUnit || 'lbs'}`;
+              } else {
+                primaryNote = weekText;
+              }
+            } else if (exercise.isBodyweightMaxRepsModel && parseFloat(exercise.baseWeight) > 0) {
+              const percMatch = exercise.stepNotes.match(/([0-9]+(?:\.[0-9]+)?)\s*%/);
+              if (percMatch) {
+                primaryNote = `${weekText}: ${percMatch[1]}% of ${exercise.baseWeight} Max Reps`;
+              } else {
+                primaryNote = weekText;
+              }
+            } else {
+              let cleanedStepNote = exercise.stepNotes.replace(/\(using [0-9]+% as base\)/gi, '').replace(/1RM target/gi, '').trim();
+              if (cleanedStepNote && weekText && !cleanedStepNote.toLowerCase().startsWith("week") && !cleanedStepNote.toLowerCase().startsWith("step")) {
+                primaryNote = `${weekText}: ${cleanedStepNote}`;
+              } else if (cleanedStepNote) {
+                primaryNote = cleanedStepNote;
+              } else {
+                primaryNote = weekText;
+              }
+            }
+          }
+        displayHtml += `<li class="exercise-list-item ${loggedClass}" data-exercise-id="${exercise.exerciseId}">
+                              ${completionIndicator}
+                              <div class="exercise-details">
+                                <span class="main-info">${mainInfo}.</span>
+                                ${primaryNote ? `<small class="primary-note-display">${primaryNote}</small>` : ''}
+                                ${exercise.notesForExerciseInTemplate ? `<small class="template-note-display">${exercise.notesForExerciseInTemplate}</small>` : ''}
+                              </div>
+                            </li>`;
+        exerciseSelect.add(new Option(displayName, exercise.exerciseId));
+      });
+      displayHtml += "</ul>";
+      workoutDetailsListDiv.innerHTML = displayHtml;
+      exerciseSelect.disabled = false;
+      if (workoutDisplayCollapseElement && !workoutDisplayCollapseElement.classList.contains('show')) {
+          new bootstrap.Collapse(workoutDisplayCollapseElement).show();
+      }
+    } else {
+      exerciseSelect.innerHTML = '<option value="" disabled selected>No exercises in this plan.</option>';
+      workoutDetailsListDiv.innerHTML = "<p><i>No exercises found for this workout plan.</i></p>";
+      if (workoutDisplayCollapseElement && !workoutDisplayCollapseElement.classList.contains('show')) {
+            new bootstrap.Collapse(workoutDisplayCollapseElement).show();
+      }
+    }
+    toggleMainLoading(false);
+  }
+
+  function prefillFormFields() {
+    const selectedExerciseId = exerciseSelect.value;
+    appState.currentSelectedExerciseId = selectedExerciseId;
+
+    const setsInput = document.getElementById("setsPerformed");
+    const repsInput = document.getElementById("repsPerformed"); // This is now type="number"
+    const weightInput = document.getElementById("weightUsed");
+    const notesInput = document.getElementById("workoutNotes");
+    const rpeInput = document.getElementById("rpeValue"); // The new RPE number input
+
+    setsInput.value = "";
+    repsInput.value = "";
+    repsInput.placeholder = "e.g. 10"; // Default placeholder
+    repsInput.readOnly = false;
+    weightInput.value = "";
+    notesInput.value = "";
+    actualAmrapRepsInput.value = "";
+    rpeInput.value = "8"; // Clear RPE number input
+
+    // Flickity related appState reset and .select call REMOVED
+
+    actualAmrapRepsGroup.style.display = "none";
+    amrapTextIndicator.style.display = "none";
+    weightUnitLabel.textContent = "(lbs)";
+
+    if (lastWorkoutDetailsToast) {
+        lastWorkoutDetailsToast.style.display = "none";
+        lastWorkoutDetailsToast.textContent = "";
+        lastWorkoutDetailsToast.className = 'alert alert-secondary mt-2';
+        lastWorkoutDetailsToast.style.fontSize = "0.875rem"; 
+        lastWorkoutDetailsToast.style.padding = "0.6rem 1rem";
+    }
+
+    if (selectedExerciseId && appState.currentWorkoutPlanDetails.length > 0) {
+      const exerciseData = appState.currentWorkoutPlanDetails.find(ex => ex.exerciseId === selectedExerciseId);
+      if (exerciseData) {
+        setsInput.value = exerciseData.calculatedSets || "";
+        weightInput.value = parseFloat(exerciseData.calculatedWeight) === 0 && !exerciseData.isBodyweightMaxRepsModel && String(exerciseData.calculatedReps).toUpperCase() !== "AMRAP" ? "" : (exerciseData.calculatedWeight || "");
+        weightUnitLabel.textContent = `(${exerciseData.weightUnit || 'lbs'})`;
+
+        if (String(exerciseData.calculatedReps).toUpperCase() === "AMRAP") {
+          repsInput.value = ""; // Number input cannot hold "AMRAP" text value
+          repsInput.placeholder = "N/A"; // Indicate actual reps go into separate field
+          repsInput.readOnly = true;
+          actualAmrapRepsGroup.style.display = "flex";
+          amrapTextIndicator.style.display = "inline";
+        } else {
+          repsInput.value = exerciseData.calculatedReps || "";
+          repsInput.placeholder = "e.g. 10"; // Set placeholder for numeric input
+          repsInput.readOnly = false;
+          actualAmrapRepsGroup.style.display = "none";
+          amrapTextIndicator.style.display = "none";
+        }
+      }
+
+      if (lastWorkoutDetailsToast) {
+        lastWorkoutDetailsToast.innerHTML = '<em><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading previous log...</em>';
+        lastWorkoutDetailsToast.style.display = "block";
+
+        google.script.run
+          .withSuccessHandler(function(lastLog) {
+            if (!lastWorkoutDetailsToast) return;
+            if (lastLog && lastLog.error) {
+              lastWorkoutDetailsToast.innerHTML = `Could not load previous log: ${lastLog.error}`;
+              lastWorkoutDetailsToast.className = 'alert alert-warning mt-2 text-dark';
+            } else if (lastLog) {
+              let detailsHtml = "<strong>Last time";
+              if (lastLog.exerciseTimestamp) {
+                const logDate = new Date(lastLog.exerciseTimestamp);
+                detailsHtml += ` (${logDate.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}):</strong> `;
+              } else {
+                detailsHtml += ":</strong> ";
+              }
+              detailsHtml += `${lastLog.setsPerformed || '-'} sets of ${lastLog.repsPerformed || '-'} reps @ ${lastLog.weightUsed === null || lastLog.weightUsed === undefined ? '-' : lastLog.weightUsed} ${lastLog.weightUnit || 'lbs'}`;
+              if (lastLog.rpeRecorded !== null && lastLog.rpeRecorded !== undefined) {
+                detailsHtml += `, RPE ${lastLog.rpeRecorded}`;
+              }
+              detailsHtml += ".";
+              if (lastLog.workoutNotes && lastLog.workoutNotes.trim() !== "") {
+                const notesText = String(lastLog.workoutNotes).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                detailsHtml += `<br><small><em>Notes: ${notesText}</em></small>`;
+              }
+              lastWorkoutDetailsToast.innerHTML = detailsHtml;
+              lastWorkoutDetailsToast.className = 'alert alert-info mt-2';
+            } else {
+              lastWorkoutDetailsToast.textContent = "No previous log found for this exercise in this plan.";
+              lastWorkoutDetailsToast.className = 'alert alert-light mt-2 text-muted';
+            }
+            lastWorkoutDetailsToast.style.fontSize = "0.875rem";
+            lastWorkoutDetailsToast.style.padding = "0.6rem 1rem";
+            lastWorkoutDetailsToast.style.display = "block";
+          })
+          .withFailureHandler(function(error) {
+            if (!lastWorkoutDetailsToast) return;
+            lastWorkoutDetailsToast.innerHTML = `Error loading previous log.`;
+            lastWorkoutDetailsToast.className = 'alert alert-danger mt-2';
+            lastWorkoutDetailsToast.style.fontSize = "0.875rem";
+            lastWorkoutDetailsToast.style.padding = "0.6rem 1rem";
+            lastWorkoutDetailsToast.style.display = "block";
+            console.error("Error fetching last log:", error);
+          })
+          .getLastLoggedDetailsForExercise(selectedExerciseId, workoutTemplateSelect.value);
+      }
+    } else {
+        if (lastWorkoutDetailsToast) lastWorkoutDetailsToast.style.display = "none";
+    }
+  }
+
+  logForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const rpeInput = document.getElementById("rpeValue");
+    const rpeInputValue = rpeInput.value;
+
+    if (rpeInputValue === "" || rpeInputValue === null) {
+      statusDiv.textContent = "Error: Please enter an RPE value (0-10).";
+      statusDiv.style.color = "red";
+      rpeInput.focus();
+      return;
+    }
+    const rpeNumericValue = parseFloat(rpeInputValue);
+    if (isNaN(rpeNumericValue) || rpeNumericValue < 0 || rpeNumericValue > 10) {
+      statusDiv.textContent = "Error: RPE must be a number between 0 and 10.";
+      statusDiv.style.color = "red";
+      rpeInput.focus();
+      return;
+    }
+    statusDiv.textContent = ""; 
+    statusDiv.style.color = "";
+
+    toggleFormLoading(true);
+    if (logFormSubmitButton) {
+      logFormSubmitButton.classList.remove('finished'); // Clear 'finished' if it was there
+      logFormSubmitButton.classList.add('active');    // Set to loading state
+    }    
+    statusDiv.textContent = "Submitting log...";
+    statusDiv.style.color = "#0d6efd";
+
+    const selectedExerciseData = appState.currentWorkoutPlanDetails.find(ex => ex.exerciseId === appState.currentSelectedExerciseId);
+    if (!selectedExerciseData) {
+      statusDiv.textContent = "Error: Could not find selected exercise data. Please re-select.";
+      statusDiv.style.color = "red";
+      toggleFormLoading(false);
+      return;
+    }
+
+    const repsPerformedValue = document.getElementById("repsPerformed").value;
+    let actualAmrapRepsValue = null;
+    // Check if it was an AMRAP set based on the *plan's* definition for this exercise
+    if (String(selectedExerciseData.calculatedReps).toUpperCase() === "AMRAP") {
+      actualAmrapRepsValue = actualAmrapRepsInput.value;
+      if (!actualAmrapRepsValue || isNaN(parseInt(actualAmrapRepsValue)) || parseInt(actualAmrapRepsValue) < 0) {
+        statusDiv.textContent = "Error: Please enter a valid number for Actual AMRAP Reps.";
+        statusDiv.style.color = "red";
+        actualAmrapRepsInput.focus();
+        toggleFormLoading(false);
+        return;
+      }
+    }
+    
+
+    const formData = {
+      templateId: workoutTemplateSelect.value,
+      exerciseId: appState.currentSelectedExerciseId,
+      exerciseName: selectedExerciseData.exerciseAlias || selectedExerciseData.exerciseName,
+      progressionModelId: selectedExerciseData.progressionModelId,
+      performedStepNumber: selectedExerciseData.currentStepNumber,
+      setsPerformed: document.getElementById("setsPerformed").value,
+
+      repsPerformed: (String(selectedExerciseData.calculatedReps).toUpperCase() === "AMRAP") ? "AMRAP" : repsPerformedValue,
+      actualAmrapReps: actualAmrapRepsValue,
+      weightUsed: document.getElementById("weightUsed").value,
+      weightUnit: selectedExerciseData.weightUnit || 'lbs',
+      rpe: rpeNumericValue, // Use the validated numeric RPE
+      notes: document.getElementById("workoutNotes").value
+    };
+
+    lastSubmittedLogFormData = formData;
+
+    google.script.run
+      .withSuccessHandler(handleSubmitSuccess)
+      .withFailureHandler(handleGenericFailure)
+      .processLogForm(formData);
+  });
+
+  function handleSubmitSuccess(result) {
+    statusDiv.textContent = result.message || "Exercise logged successfully!";
+    statusDiv.style.color = "green";
+
+    if (logFormSubmitButton) {
+      logFormSubmitButton.classList.remove('active');
+      logFormSubmitButton.classList.add('finished');
+    }
+    toggleFormLoading(false); // Re-enable other form elements
+
+    if (lastSubmittedLogFormData && lastSubmittedLogFormData.exerciseId) {
+      const exerciseId = lastSubmittedLogFormData.exerciseId;
+      const exerciseInClientPlan = appState.currentWorkoutPlanDetails.find(ex => ex.exerciseId === exerciseId);
+      if (exerciseInClientPlan) {
+        exerciseInClientPlan.isLoggedToday = true;
+      }
+      const exerciseListItem = document.querySelector(`.exercise-list-item[data-exercise-id="${exerciseId}"]`);
+      if (exerciseListItem) {
+        const completionIndicator = exerciseListItem.querySelector('.completion-indicator');
+        if (completionIndicator) {
+          completionIndicator.innerHTML = '&#10004;';
+        }
+        exerciseListItem.classList.add('logged-today-visual');
+      }
+    }
+    
+    document.getElementById("workoutNotes").value = "";
+    if (document.getElementById("repsPerformed").readOnly) { 
+        actualAmrapRepsInput.value = ""; 
+    }
+    document.getElementById("rpeValue").value = ""; // Clear RPE number input
+
+    setTimeout(() => {
+      if (logFormSubmitButton && logFormSubmitButton.classList.contains('finished')) {
+        logFormSubmitButton.classList.remove('finished');
+        // The CSS should handle reverting to the default "Submit Exercise" text visibility
+      }      
+      if (statusDiv.style.color === "green") {
+         statusDiv.textContent = "";
+         statusDiv.style.color = "";
+      }
+    }, 3000);
+
+  }
+
+  function handleGenericFailure(error) {
+    console.error("Server Error:", error);
+    statusDiv.textContent = "Error: " + (error.message || "An unknown error occurred.");
+    statusDiv.style.color = "red";
+
+    if (logFormSubmitButton) {
+      logFormSubmitButton.classList.remove('active');
+      logFormSubmitButton.classList.remove('finished');
+    }
+    toggleFormLoading(false); // Re-enable other form elements
+
+    if (fullPageLoader && fullPageLoader.style.display !== "none") {
+        toggleMainLoading(false);
+    }
+    if (formLoadingIndicator && formLoadingIndicator.style.display !== "none") {
+        toggleFormLoading(false);
+    }
+  }
+  </script>
+</body>
+
+</html>
