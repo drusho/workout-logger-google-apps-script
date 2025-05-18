@@ -104,19 +104,19 @@ backup by the user.
 1.  **Open Web App:** User accesses the deployed web app URL on their mobile device.
 2.  **Select Workout Plan:** The user chooses a plan from the "Workout Plan" dropdown.
 
-    <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/1.2%20-%20select%20exercise.gif?raw=true" width="400"> </br>
+    <kbd> <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/1.2%20-%20select%20exercise.gif?raw=true" width="400"/> </kbd> </br>
 
 3.  **View Plan Summary:** The app displays a summary of the selected plan, listing all exercises with their prescribed sets, reps, </br>
     and calculated weights. 
     These prescriptions are dynamically calculated based on the user's current progression (`UserExerciseProgression`), the exercise's </br>
     assigned progression model (`ProgressionModelSteps`), and base exercise data (`ExerciseLibrary`).
 
-     <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/1.3%20-%20select%20exercise.gif?raw=true" width="400"> </br>
+    <kbd> <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/1.3%20-%20select%20exercise.gif?raw=true" width="400"/> </kbd> </br>
 
 4.  **Select Exercise to Log:** The user picks an exercise from the "Select exercise" dropdown, which lists exercises from the currently </br>
     active workout plan summary.
 
-- <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/2%20-%20select%20exercise.gif?raw=true" width="400"> </br>
+    <kbd> <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/2%20-%20select%20exercise.gif?raw=true" width="400"/> </kbd> </br>
 
 5.  **Contextual Information:**
     * The form pre-fills with the planned sets, reps, and weight for that exercise.
@@ -130,7 +130,7 @@ backup by the user.
     * The button shows a loading animation.
     * The data is sent to the Google Apps Script backend.
 
-     <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/3%20-%20submit%20workout.gif?raw=true" width="400"> </br> 
+    <kbd> <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/3%20-%20submit%20workout.gif?raw=true" width="400"/> </kbd> </br> 
 
 8.  **Backend Processing:**
     * The script logs the workout details into the `WorkoutLog` sheet.
@@ -141,7 +141,7 @@ backup by the user.
 9.  **Feedback:** The button shows a checkmark for success, and a status message confirms the log. </br>
     The workout summary on the page also visually indicates that the exercise has been logged for the day. </br>
     The next time this exercise is loaded, its prescription will reflect any progression. </br> </br>
-     <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/4%20-%20submit%20workout.gif?raw=true" width="400">
+    <kbd> <img src="https://github.com/drusho/workout-logger-google-apps-script/blob/main/images/4%20-%20submit%20workout.gif?raw=true" width="400"/> </kbd>
 
 ## Customization
 
