@@ -170,6 +170,13 @@ user's current estimated 1RM or max reps from the `UserExerciseProgression` shee
 * *Multiple Users.*
 * *Support for different types of sets (e.g., drop sets, warm-up sets).*
 
+
+## Resources
+* **[Sample Workout Google Sheet](https://docs.google.com/spreadsheets/d/1E7kHCAq2b8R8LhDi_xS-VrQHp6tXeuVpAnBAojPnzSg/edit?usp=sharing)**</br>
+Create a copy of this sheet and then deploy the webapp.
+
+* **[Test WebApp](https://script.google.com/macros/s/AKfycbwiQyKHvKap9oiKqSpAhFdbq9xH36wOZCr0a6QRZEgSL0ErCWXhaUoVAIPcqD1zM_2I/exec)** </br>
+Play with a existing testing webapp.
 ---
 
 *This README was last updated on May 18, 2025.*
